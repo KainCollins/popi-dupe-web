@@ -514,7 +514,7 @@ function renderCatalog(products){
       : `<span class="wa-btn disabled">Ya se vendió</span>`;
 
     const mediaContent = p.foto
-      ? `<img src="${p.foto}" alt="${p.name}" style="width:100%; height:100%; object-fit:cover;" loading="lazy" onerror="this.parentElement.innerHTML='<span>👕</span>'">`
+      ? `<img src="${p.foto}" alt="${p.name}" style="width:100%; height:100%; object-fit:contain; padding:12px;" loading="lazy" onerror="this.parentElement.innerHTML='<span>👕</span>'">`
       : `<span>👕</span>`;
 
     card.innerHTML = `
