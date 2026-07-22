@@ -250,6 +250,14 @@
     background:#D9D2C8; color:#6B4226; border-color:#6B4226; cursor:not-allowed; pointer-events:none;
   }
   .catalog-note{ margin-top:30px; font-size:13.5px; color:rgba(43,27,18,0.6); text-align:center;}
+  .sort-control{ display:flex; align-items:center; gap:10px; }
+  .sort-control label{ font-size:13px; color:rgba(43,27,18,0.65); white-space:nowrap; }
+  .sort-control select{
+    font-family:'Poppins', sans-serif; font-size:13.5px; font-weight:600; color:var(--ink);
+    background:var(--paper); border:2px solid var(--ink); border-radius:999px;
+    padding:9px 16px; cursor:pointer;
+  }
+  @media (max-width:520px){ .sort-control{ width:100%; } .sort-control select{ flex:1; } }
 
   .item-media img.zoomable{ cursor:zoom-in; }
   .lightbox-overlay{
@@ -554,6 +562,14 @@
       <h2>Catálogo<br>disponible</h2>
       <p>Cada prenda tiene su propio ID. Escríbenos por WhatsApp indicando el número para hacerla tuya — el primero en escribir se la lleva.</p>
     </div>
+    <div class="sort-control">
+      <label for="sortSelect">Ordenar por</label>
+      <select id="sortSelect">
+        <option value="id">ID</option>
+        <option value="price-desc">Precio: mayor a menor</option>
+        <option value="price-asc">Precio: menor a mayor</option>
+      </select>
+    </div>
   </div>
   <div class="catalog-grid" id="catalogGrid"></div>
 
@@ -742,6 +758,8 @@ const WHATSAPP_NUMBER = '56965823499'; // Número real de contacto Popi Dupe
 
 const fmt = n => '$' + n.toLocaleString('es-CL');
 const grid = document.getElementById('catalogGrid');
+const sortSelect = document.getElementById('sortSelect');
+let rawProducts = [];
 const bgColors = ['var(--gold-soft)', 'var(--bg)', 'var(--pink-soft)'];
 
 const lightboxOverlay = document.getElementById('lightboxOverlay');
@@ -874,7 +892,7 @@ function loadCatalog(){
     complete: function(results){
       const rows = results.data;
 
-      const products = rows
+      rawProducts = rows
         .filter(row => row.ID && row.Nombre) // ignora filas vacías o incompletas
         .map(row => ({
           id: String(row.ID).trim(),
@@ -884,13 +902,28 @@ function loadCatalog(){
           status: (row.Estado || 'Disponible').trim(),
         }));
 
-      renderCatalog(products);
+      applySort(sortSelect.value);
     },
     error: function(){
       grid.innerHTML = '<p style="grid-column:1/-1; text-align:center; opacity:0.6;">No pudimos cargar el catálogo justo ahora. Intenta recargar la página en unos minutos.</p>';
     }
   });
 }
+
+function applySort(mode){
+  const sorted = rawProducts
+    .filter(p => p.status.toLowerCase() !== 'vendido') // piezas únicas: lo vendido no se muestra
+    .sort((a, b) => {
+      if (mode === 'price-desc') return b.price - a.price;
+      if (mode === 'price-asc') return a.price - b.price;
+      return (parseInt(a.id, 10) || 0) - (parseInt(b.id, 10) || 0); // por ID ascendente (default)
+    });
+
+  renderCatalog(sorted);
+}
+
+
+sortSelect.addEventListener('change', () => applySort(sortSelect.value));
 
 loadCatalog();
 
