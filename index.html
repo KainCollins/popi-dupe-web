@@ -200,6 +200,10 @@
   .step-icon{ font-size:36px; display:block; margin-bottom:10px; line-height:1; }
   .step-card h3{font-size:16px; margin-bottom:6px; font-weight:600;}
   .step-card p{margin:0; font-size:13.5px; color:rgba(43,27,18,0.72); line-height:1.5;}
+  .step-link{
+    display:inline-block; margin-top:10px; font-size:12.5px; font-weight:600;
+    color:var(--pink-deep); text-decoration:none; border-bottom:1.5px solid var(--pink-deep);
+  }
 
   .step-arrow{
     align-self:center; font-size:22px; color:var(--pink-deep); flex:0 0 auto;
@@ -612,6 +616,7 @@
         <span class="step-num">4</span>
         <h3>Pagas y te llega</h3>
         <p>Coordinamos por WhatsApp, transferencia, y enviamos a todo Chile.</p>
+        <a class="step-link" href="/como-pagar.html">Ver cómo pagar →</a>
       </div>
     </div>
   </div>
@@ -761,7 +766,7 @@ function renderLightboxContent(){
   lightboxName.textContent = p.name;
   lightboxPrice.textContent = fmt(p.price);
 
-  const waMessage = encodeURIComponent(`Hola! Quiero la prenda ID ${p.id} de Popi Dupe 😊`);
+  const waMessage = encodeURIComponent(`Hola! Quiero la prenda ID ${p.id} de la Boutique Popi Dupe 😊\n\nAquí puedes ver cómo pagar paso a paso 💳\nhttps://boutiquepopidupe.cl/como-pagar.html`);
   lightboxWa.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${waMessage}`;
   lightboxWa.classList.toggle('disabled', isSold);
   lightboxWa.textContent = isSold ? 'Ya se vendió' : '💬 Resérvalo por WhatsApp';
@@ -832,7 +837,7 @@ function renderCatalog(products){
     const card = document.createElement('div');
     card.className = 'item-card' + (isSold ? ' sold' : '');
 
-    const waMessage = encodeURIComponent(`Hola! Quiero la prenda ID ${p.id} de Popi Dupe 😊`);
+    const waMessage = encodeURIComponent(`Hola! Quiero la prenda ID ${p.id} de la Boutique Popi Dupe 😊\n\nAquí puedes ver cómo pagar paso a paso 💳\nhttps://boutiquepopidupe.cl/como-pagar.html`);
     const waLink = `https://wa.me/${WHATSAPP_NUMBER}?text=${waMessage}`;
 
     const buttonHtml = !isSold

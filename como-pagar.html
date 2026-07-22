@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>¿Cómo pagar? — Boutique Popi Dupe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Caveat:wght@600;700&family=Poppins:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FDF4E5;
+    --paper:#FFFDF8;
+    --ink:#2B1B12;
+    --pink:#F0839A;
+    --pink-deep:#C4506A;
+    --pink-soft:#FADCE2;
+    --gold:#D9A54A;
+    --gold-soft:#F3D9A6;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--bg); color:var(--ink); font-family:'Poppins', sans-serif;
+    -webkit-font-smoothing:antialiased; padding:28px 18px 60px;
+  }
+  .wrap{ max-width:480px; margin:0 auto; }
+  .eyebrow{
+    font-family:'Caveat', cursive; font-weight:700; color:var(--pink-deep); font-size:20px; display:block;
+  }
+  h1{ font-family:'Fredoka', sans-serif; font-weight:700; font-size:30px; margin:4px 0 10px; line-height:1.15; }
+  .intro{ font-size:14.5px; color:rgba(43,27,18,0.75); line-height:1.6; margin-bottom:26px; }
+  .steps{ display:flex; flex-direction:column; gap:14px; margin-bottom:28px; }
+  .step{
+    position:relative; background:var(--paper); border:2px solid var(--ink); border-radius:16px;
+    padding:20px 18px 18px 20px; box-shadow:4px 4px 0 var(--ink);
+  }
+  .step-num{
+    position:absolute; top:-14px; left:-12px; width:32px; height:32px; border-radius:50%;
+    background:var(--pink); color:var(--paper); border:2px solid var(--ink);
+    display:flex; align-items:center; justify-content:center; font-family:'Space Mono'; font-weight:700; font-size:14px;
+    box-shadow:2px 2px 0 var(--ink);
+  }
+  .step h3{ font-size:16px; font-weight:600; margin-bottom:4px; }
+  .step p{ font-size:13.5px; color:rgba(43,27,18,0.72); line-height:1.5; }
+  .pay-data{
+    background:var(--gold-soft); border:2px solid var(--ink); border-radius:16px;
+    padding:20px 20px 18px; box-shadow:4px 4px 0 var(--ink); margin-bottom:26px;
+  }
+  .pay-data h3{ font-size:15px; font-weight:600; margin-bottom:14px; }
+  .pay-row{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    background:var(--paper); border:2px solid var(--ink); border-radius:10px;
+    padding:10px 12px; margin-bottom:8px;
+  }
+  .pay-row:last-child{ margin-bottom:0; }
+  .pay-row .lbl{ font-size:11px; color:rgba(43,27,18,0.6); text-transform:uppercase; letter-spacing:0.03em; display:block; }
+  .pay-row .val{ font-family:'Space Mono'; font-size:13.5px; font-weight:700; word-break:break-all; }
+  .copy-btn{
+    flex-shrink:0; background:var(--ink); color:var(--gold-soft); border:none; border-radius:8px;
+    padding:7px 12px; font-size:12px; font-weight:600; cursor:pointer; font-family:'Poppins';
+  }
+  .copy-btn.copied{ background:#5b9e5b; color:#fff; }
+  .copy-all-btn{
+    width:100%; margin-top:12px; background:var(--ink); color:var(--gold-soft); border:2px solid var(--ink);
+    border-radius:10px; padding:12px; font-weight:600; font-size:14px; cursor:pointer; font-family:'Poppins';
+  }
+  .copy-all-btn.copied{ background:#5b9e5b; border-color:var(--ink); color:#fff; }
+  .note{
+    background:var(--pink-soft); border:2px solid var(--pink-deep); border-radius:16px;
+    padding:16px 18px; font-size:13px; color:rgba(43,27,18,0.85); line-height:1.55; margin-bottom:26px;
+  }
+  .note strong{ display:block; margin-bottom:4px; font-size:14px; }
+  .btn{
+    display:flex; align-items:center; justify-content:center; gap:8px; width:100%;
+    background:#25D366; color:#fff; border:2px solid var(--ink); border-radius:12px;
+    padding:14px; font-weight:600; font-size:15px; text-decoration:none; box-shadow:3px 3px 0 var(--ink);
+  }
+  .back{ display:block; text-align:center; margin-top:18px; font-size:13px; color:var(--ink); opacity:0.6; text-decoration:none; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <span class="eyebrow">Boutique Popi Dupe</span>
+    <h1>¿Cómo pagar tu prenda?</h1>
+    <p class="intro">Así de simple es coordinar tu compra. Todo se hace por este mismo WhatsApp, paso a paso.</p>
+
+    <div class="steps">
+      <div class="step">
+        <span class="step-num">1</span>
+        <h3>Confirmas la prenda</h3>
+        <p>Nos escribes el ID de la prenda que quieres (o simplemente responde este chat).</p>
+      </div>
+      <div class="step">
+        <span class="step-num">2</span>
+        <h3>Transfieres a estos datos</h3>
+        <p>Usa la cuenta que aparece justo abajo — puedes copiar cada dato con un toque.</p>
+      </div>
+      <div class="step">
+        <span class="step-num">3</span>
+        <h3>Nos mandas el comprobante</h3>
+        <p>Apenas transfieras, mándanos la captura del comprobante para confirmar tu pago.</p>
+      </div>
+      <div class="step">
+        <span class="step-num">4</span>
+        <h3>Coordinamos el envío</h3>
+        <p>Nos pasas tu dirección y despachamos a todo Chile. El envío va por pagar directo al courier.</p>
+      </div>
+    </div>
+
+    <div class="pay-data">
+      <h3>💳 Datos para transferir</h3>
+      <div class="pay-row">
+        <div><span class="lbl">Nombre</span><span class="val">Francisca Ignacia Álvarez Ríos</span></div>
+        <button class="copy-btn" data-copy="Francisca Ignacia Álvarez Ríos">Copiar</button>
+      </div>
+      <div class="pay-row">
+        <div><span class="lbl">RUT</span><span class="val">17.427.449-5</span></div>
+        <button class="copy-btn" data-copy="17.427.449-5">Copiar</button>
+      </div>
+      <div class="pay-row">
+        <div><span class="lbl">Banco</span><span class="val">Mercado Pago — Cuenta Vista</span></div>
+        <button class="copy-btn" data-copy="Mercado Pago - Cuenta Vista">Copiar</button>
+      </div>
+      <div class="pay-row">
+        <div><span class="lbl">N° de cuenta</span><span class="val">1061736099</span></div>
+        <button class="copy-btn" data-copy="1061736099">Copiar</button>
+      </div>
+      <div class="pay-row">
+        <div><span class="lbl">Correo</span><span class="val">popidupe@gmail.com</span></div>
+        <button class="copy-btn" data-copy="popidupe@gmail.com">Copiar</button>
+      </div>
+      <button class="copy-all-btn" id="copyAllBtn" data-copy="Francisca Ignacia Álvarez Ríos&#10;RUT: 17.427.449-5&#10;Mercado Pago - Cuenta Vista&#10;N° de cuenta: 1061736099&#10;popidupe@gmail.com">📋 Copiar todos los datos</button>
+    </div>
+
+    <div class="note">
+      <strong>Importante</strong>
+      Por ser piezas únicas, la venta es final — no hay cambios ni devoluciones. Revisa bien la foto y la talla antes de confirmar.
+    </div>
+
+    <a class="btn" href="https://wa.me/56965823499" target="_blank" rel="noopener">💬 Volver al chat de WhatsApp</a>
+    <a class="back" href="/">← Ver el catálogo completo</a>
+  </div>
+
+  <script>
+    document.querySelectorAll('.copy-btn, .copy-all-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const text = btn.getAttribute('data-copy');
+        navigator.clipboard.writeText(text).then(() => {
+          const original = btn.textContent;
+          btn.textContent = '¡Copiado!';
+          btn.classList.add('copied');
+          setTimeout(() => {
+            btn.textContent = original;
+            btn.classList.remove('copied');
+          }, 1500);
+        });
+      });
+    });
+  </script>
+</body>
+</html>
