@@ -247,6 +247,21 @@
   }
   .catalog-note{ margin-top:30px; font-size:13.5px; color:rgba(43,27,18,0.6); text-align:center;}
 
+  .item-media img.zoomable{ cursor:zoom-in; }
+  .lightbox-overlay{
+    position:fixed; inset:0; background:rgba(0,0,0,0.86); z-index:999;
+    display:none; align-items:center; justify-content:center; padding:24px;
+  }
+  .lightbox-overlay.active{ display:flex; }
+  .lightbox-overlay img{
+    max-width:90vw; max-height:85vh; border-radius:12px; box-shadow:0 10px 40px rgba(0,0,0,0.5);
+  }
+  .lightbox-close{
+    position:absolute; top:20px; right:24px; width:40px; height:40px; border-radius:50%;
+    background:var(--paper); border:2px solid var(--ink); color:var(--ink); font-size:20px;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+  }
+
   /* ---------- WHY / STORY BLOCK ---------- */
   .story{ padding:74px 0; }
   .story-grid{ display:grid; grid-template-columns:0.9fr 1.1fr; gap:48px; align-items:center;}
@@ -508,6 +523,11 @@
     </div>
   </div>
   <div class="catalog-grid" id="catalogGrid"></div>
+
+  <div class="lightbox-overlay" id="lightboxOverlay">
+    <span class="lightbox-close" id="lightboxClose">✕</span>
+    <img id="lightboxImg" src="" alt="">
+  </div>
   <p class="catalog-note">¿Viste algo en el live que ya no está aquí? Puede que ya se haya vendido — sigue nuestro TikTok para no perderte el próximo drop.</p>
 </section>
 
@@ -680,6 +700,35 @@ const fmt = n => '$' + n.toLocaleString('es-CL');
 const grid = document.getElementById('catalogGrid');
 const bgColors = ['var(--gold-soft)', 'var(--bg)', 'var(--pink-soft)'];
 
+const lightboxOverlay = document.getElementById('lightboxOverlay');
+const lightboxImg = document.getElementById('lightboxImg');
+const lightboxClose = document.getElementById('lightboxClose');
+
+function openLightbox(src, alt){
+  lightboxImg.src = src;
+  lightboxImg.alt = alt;
+  lightboxOverlay.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeLightbox(){
+  lightboxOverlay.classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+grid.addEventListener('click', e => {
+  const img = e.target.closest('.zoomable');
+  if (img) openLightbox(img.src, img.alt);
+});
+
+lightboxClose.addEventListener('click', closeLightbox);
+lightboxOverlay.addEventListener('click', e => {
+  if (e.target === lightboxOverlay) closeLightbox();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeLightbox();
+});
+
 function renderCatalog(products){
   grid.innerHTML = '';
 
@@ -701,7 +750,7 @@ function renderCatalog(products){
       : `<span class="wa-btn disabled">Ya se vendió</span>`;
 
     const mediaContent = p.foto
-      ? `<img src="${p.foto}" alt="${p.name}" style="width:100%; height:100%; object-fit:contain; padding:12px;" loading="lazy" onerror="this.parentElement.innerHTML='<span>👕</span>'">`
+      ? `<img class="zoomable" src="${p.foto}" alt="${p.name}" style="width:100%; height:100%; object-fit:contain; padding:12px;" loading="lazy" onerror="this.parentElement.innerHTML='<span>👕</span>'">`
       : `<span>👕</span>`;
 
     card.innerHTML = `
