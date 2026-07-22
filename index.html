@@ -254,12 +254,41 @@
   }
   .lightbox-overlay.active{ display:flex; }
   .lightbox-overlay img{
-    max-width:90vw; max-height:85vh; border-radius:12px; box-shadow:0 10px 40px rgba(0,0,0,0.5);
+    max-width:90vw; max-height:78vh; border-radius:12px; box-shadow:0 10px 40px rgba(0,0,0,0.5);
   }
   .lightbox-close{
     position:absolute; top:20px; right:24px; width:40px; height:40px; border-radius:50%;
     background:var(--paper); border:2px solid var(--ink); color:var(--ink); font-size:20px;
-    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:2;
+  }
+  .lightbox-nav{
+    position:absolute; top:50%; transform:translateY(-50%); width:48px; height:48px;
+    border-radius:50%; background:var(--paper); border:2px solid var(--ink); color:var(--ink);
+    font-size:22px; display:flex; align-items:center; justify-content:center; cursor:pointer;
+    z-index:2; box-shadow:2px 2px 0 var(--ink); user-select:none;
+  }
+  .lightbox-nav:hover{ background:var(--gold-soft); }
+  .lightbox-prev{ left:16px; }
+  .lightbox-next{ right:16px; }
+  .lightbox-caption{
+    position:absolute; bottom:18px; left:50%; transform:translateX(-50%);
+    background:var(--paper); border:2px solid var(--ink); border-radius:16px;
+    box-shadow:4px 4px 0 var(--ink); padding:12px 20px; max-width:92vw;
+    display:flex; align-items:center; gap:16px; flex-wrap:wrap; justify-content:center;
+  }
+  .lightbox-caption .lb-info h4{ margin:0; font-size:14.5px; font-weight:600; color:var(--ink); }
+  .lightbox-caption .lb-price{ font-family:'Space Mono'; color:var(--pink-deep); font-weight:700; font-size:14.5px; }
+  .lightbox-prompt{ font-size:12.5px; color:rgba(43,27,18,0.7); white-space:nowrap; }
+  .lightbox-wa{
+    background:#25D366; color:#fff; border:2px solid var(--ink); border-radius:10px;
+    padding:9px 16px; font-weight:600; text-decoration:none; font-size:13.5px;
+    display:flex; align-items:center; gap:6px; white-space:nowrap;
+  }
+  .lightbox-wa.disabled{ background:#D9D2C8; color:#6B4226; cursor:not-allowed; pointer-events:none; }
+  @media (max-width:600px){
+    .lightbox-nav{ width:38px; height:38px; font-size:18px; }
+    .lightbox-overlay img{ max-height:66vh; }
+    .lightbox-caption{ flex-direction:column; gap:8px; padding:12px 16px; }
   }
 
   /* ---------- WHY / STORY BLOCK ---------- */
@@ -526,7 +555,17 @@
 
   <div class="lightbox-overlay" id="lightboxOverlay">
     <span class="lightbox-close" id="lightboxClose">✕</span>
+    <span class="lightbox-nav lightbox-prev" id="lightboxPrev">‹</span>
     <img id="lightboxImg" src="" alt="">
+    <span class="lightbox-nav lightbox-next" id="lightboxNext">›</span>
+    <div class="lightbox-caption">
+      <div class="lb-info">
+        <h4 id="lightboxName"></h4>
+        <div class="lb-price" id="lightboxPrice"></div>
+      </div>
+      <span class="lightbox-prompt">¿Te gusta lo que ves?</span>
+      <a class="lightbox-wa" id="lightboxWa" href="#" target="_blank" rel="noopener">💬 Resérvalo por WhatsApp</a>
+    </div>
   </div>
   <p class="catalog-note">¿Viste algo en el live que ya no está aquí? Puede que ya se haya vendido — sigue nuestro TikTok para no perderte el próximo drop.</p>
 </section>
@@ -703,10 +742,38 @@ const bgColors = ['var(--gold-soft)', 'var(--bg)', 'var(--pink-soft)'];
 const lightboxOverlay = document.getElementById('lightboxOverlay');
 const lightboxImg = document.getElementById('lightboxImg');
 const lightboxClose = document.getElementById('lightboxClose');
+const lightboxPrev = document.getElementById('lightboxPrev');
+const lightboxNext = document.getElementById('lightboxNext');
+const lightboxName = document.getElementById('lightboxName');
+const lightboxPrice = document.getElementById('lightboxPrice');
+const lightboxWa = document.getElementById('lightboxWa');
 
-function openLightbox(src, alt){
-  lightboxImg.src = src;
-  lightboxImg.alt = alt;
+let currentProducts = [];
+let currentIndex = 0;
+
+function renderLightboxContent(){
+  const p = currentProducts[currentIndex];
+  if (!p) return;
+
+  const isSold = p.status.toLowerCase() === 'vendido';
+  lightboxImg.src = p.foto;
+  lightboxImg.alt = p.name;
+  lightboxName.textContent = p.name;
+  lightboxPrice.textContent = fmt(p.price);
+
+  const waMessage = encodeURIComponent(`Hola! Quiero la prenda ID ${p.id} de Popi Dupe 😊`);
+  lightboxWa.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${waMessage}`;
+  lightboxWa.classList.toggle('disabled', isSold);
+  lightboxWa.textContent = isSold ? 'Ya se vendió' : '💬 Resérvalo por WhatsApp';
+
+  const multiple = currentProducts.length > 1;
+  lightboxPrev.style.display = multiple ? 'flex' : 'none';
+  lightboxNext.style.display = multiple ? 'flex' : 'none';
+}
+
+function openLightbox(index){
+  currentIndex = index;
+  renderLightboxContent();
   lightboxOverlay.classList.add('active');
   document.body.style.overflow = 'hidden';
 }
@@ -716,21 +783,44 @@ function closeLightbox(){
   document.body.style.overflow = '';
 }
 
+function showPrev(){
+  for (let i = 0; i < currentProducts.length; i++){
+    currentIndex = (currentIndex - 1 + currentProducts.length) % currentProducts.length;
+    if (currentProducts[currentIndex].foto) break;
+  }
+  renderLightboxContent();
+}
+
+function showNext(){
+  for (let i = 0; i < currentProducts.length; i++){
+    currentIndex = (currentIndex + 1) % currentProducts.length;
+    if (currentProducts[currentIndex].foto) break;
+  }
+  renderLightboxContent();
+}
+
 grid.addEventListener('click', e => {
   const img = e.target.closest('.zoomable');
-  if (img) openLightbox(img.src, img.alt);
+  if (img) openLightbox(parseInt(img.dataset.index, 10));
 });
 
 lightboxClose.addEventListener('click', closeLightbox);
+lightboxPrev.addEventListener('click', showPrev);
+lightboxNext.addEventListener('click', showNext);
 lightboxOverlay.addEventListener('click', e => {
   if (e.target === lightboxOverlay) closeLightbox();
 });
 document.addEventListener('keydown', e => {
+  if (!lightboxOverlay.classList.contains('active')) return;
   if (e.key === 'Escape') closeLightbox();
+  if (e.key === 'ArrowLeft') showPrev();
+  if (e.key === 'ArrowRight') showNext();
 });
+
 
 function renderCatalog(products){
   grid.innerHTML = '';
+  currentProducts = products;
 
   if (products.length === 0) {
     grid.innerHTML = '<p style="grid-column:1/-1; text-align:center; opacity:0.6;">Todavía no hay prendas cargadas en el catálogo.</p>';
@@ -750,7 +840,7 @@ function renderCatalog(products){
       : `<span class="wa-btn disabled">Ya se vendió</span>`;
 
     const mediaContent = p.foto
-      ? `<img class="zoomable" src="${p.foto}" alt="${p.name}" style="width:100%; height:100%; object-fit:contain; padding:12px;" loading="lazy" onerror="this.parentElement.innerHTML='<span>👕</span>'">`
+      ? `<img class="zoomable" data-index="${i}" src="${p.foto}" alt="${p.name}" style="width:100%; height:100%; object-fit:contain; padding:12px;" loading="lazy" onerror="this.parentElement.innerHTML='<span>👕</span>'">`
       : `<span>👕</span>`;
 
     card.innerHTML = `
