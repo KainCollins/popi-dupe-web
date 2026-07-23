@@ -229,7 +229,8 @@
   .item-media{ height:210px; position:relative; display:flex; align-items:center; justify-content:center; font-size:60px;}
   .item-id-badge{
     position:absolute; top:12px; left:12px; background:var(--ink); color:var(--gold-soft);
-    font-family:'Space Mono'; font-size:12px; font-weight:700; padding:5px 11px; border-radius:999px;
+    font-family:'Space Mono'; font-size:19px; font-weight:700; padding:8px 16px; border-radius:999px;
+    box-shadow:2px 2px 0 rgba(0,0,0,0.25); z-index:1;
   }
   .item-status{
     position:absolute; top:12px; right:12px; font-family:'Space Mono'; font-size:10.5px; font-weight:700;
@@ -268,19 +269,37 @@
   }
   @media (max-width:520px){ .sort-control{ width:100%; } .sort-control select{ flex:1; } }
 
-  .filters-bar{ display:flex; flex-wrap:wrap; gap:22px; margin:2px 0 26px; }
-  .filter-group{ display:none; align-items:center; gap:10px; flex-wrap:wrap; }
-  .filter-label{
-    font-size:11.5px; font-weight:700; color:rgba(43,27,18,0.55); text-transform:uppercase; letter-spacing:0.04em;
-  }
-  .chip-list{ display:flex; gap:8px; flex-wrap:wrap; }
-  .chip{
-    font-family:'Poppins', sans-serif; font-size:13px; font-weight:600; color:var(--ink);
+  .filters-bar{ display:flex; flex-wrap:wrap; gap:14px; margin:2px 0 26px; }
+  .filter-dropdown{ position:relative; display:none; }
+  .filter-btn{
+    font-family:'Poppins', sans-serif; font-size:13.5px; font-weight:600; color:var(--ink);
     background:var(--paper); border:2px solid var(--ink); border-radius:999px;
-    padding:7px 15px; cursor:pointer; transition:background 0.15s ease, color 0.15s ease;
+    padding:9px 16px; cursor:pointer; display:flex; align-items:center; gap:7px;
   }
-  .chip:hover{ background:var(--gold-soft); }
-  .chip.active{ background:var(--pink-deep); border-color:var(--ink); color:var(--paper); }
+  .filter-btn:hover{ background:var(--gold-soft); }
+  .filter-dropdown.open .filter-btn{ background:var(--pink-deep); color:var(--paper); }
+  .filter-count{
+    background:var(--ink); color:var(--paper); font-family:'Space Mono'; font-size:11px; font-weight:700;
+    border-radius:999px; padding:1px 7px; display:none;
+  }
+  .filter-count.show{ display:inline-block; }
+  .filter-dropdown.open .filter-count{ background:var(--paper); color:var(--pink-deep); }
+  .filter-caret{ font-size:10px; transition:transform 0.15s ease; }
+  .filter-dropdown.open .filter-caret{ transform:rotate(180deg); }
+
+  .filter-panel{
+    display:none; position:absolute; top:calc(100% + 8px); left:0; z-index:20;
+    background:var(--paper); border:2px solid var(--ink); border-radius:14px;
+    box-shadow:4px 4px 0 var(--ink); padding:10px; min-width:190px;
+    max-height:260px; overflow-y:auto;
+  }
+  .filter-dropdown.open .filter-panel{ display:block; }
+  .filter-option{
+    display:flex; align-items:center; gap:9px; padding:8px 6px; font-size:13.5px;
+    cursor:pointer; border-radius:8px; white-space:nowrap;
+  }
+  .filter-option:hover{ background:var(--gold-soft); }
+  .filter-option input[type="checkbox"]{ width:16px; height:16px; accent-color:var(--pink-deep); cursor:pointer; }
 
   .lightbox-dots{ display:none; gap:7px; justify-content:center; margin-top:12px; }
   .lightbox-dot{
@@ -298,7 +317,12 @@
   .lightbox-overlay img{
     max-width:90vw; max-height:78vh; border-radius:12px; box-shadow:0 10px 40px rgba(0,0,0,0.5);
   }
-  .lightbox-media{ display:flex; flex-direction:column; align-items:center; max-width:90vw; }
+  .lightbox-media{ display:flex; flex-direction:column; align-items:center; max-width:90vw; position:relative; }
+  .lightbox-id-badge{
+    position:absolute; top:10px; left:10px; background:var(--ink); color:var(--gold-soft);
+    font-family:'Space Mono'; font-size:15px; font-weight:700; padding:6px 14px; border-radius:999px;
+    box-shadow:2px 2px 0 rgba(0,0,0,0.35); z-index:2;
+  }
   .lightbox-close{
     position:absolute; top:20px; right:24px; width:40px; height:40px; border-radius:50%;
     background:var(--paper); border:2px solid var(--ink); color:var(--ink); font-size:20px;
@@ -603,13 +627,17 @@
   </div>
 
   <div class="filters-bar">
-    <div class="filter-group" id="tallaFilterGroup">
-      <span class="filter-label">Talla</span>
-      <div class="chip-list" id="tallaChips"></div>
+    <div class="filter-dropdown" id="tallaFilterGroup">
+      <button type="button" class="filter-btn" id="tallaFilterBtn">
+        Talla <span class="filter-count" id="tallaCount"></span> <span class="filter-caret">▾</span>
+      </button>
+      <div class="filter-panel" id="tallaPanel"></div>
     </div>
-    <div class="filter-group" id="categoriaFilterGroup">
-      <span class="filter-label">Categoría</span>
-      <div class="chip-list" id="categoriaChips"></div>
+    <div class="filter-dropdown" id="categoriaFilterGroup">
+      <button type="button" class="filter-btn" id="categoriaFilterBtn">
+        Categoría <span class="filter-count" id="categoriaCount"></span> <span class="filter-caret">▾</span>
+      </button>
+      <div class="filter-panel" id="categoriaPanel"></div>
     </div>
   </div>
 
@@ -619,6 +647,7 @@
     <span class="lightbox-close" id="lightboxClose">✕</span>
     <span class="lightbox-nav lightbox-prev" id="lightboxPrev">‹</span>
     <div class="lightbox-media">
+      <span class="lightbox-id-badge" id="lightboxIdBadge"></span>
       <img id="lightboxImg" src="" alt="">
       <div class="lightbox-dots" id="lightboxDots"></div>
     </div>
@@ -807,10 +836,14 @@ const sortSelect = document.getElementById('sortSelect');
 let rawProducts = [];
 const bgColors = ['var(--gold-soft)', 'var(--bg)', 'var(--pink-soft)'];
 
-const tallaChipsEl = document.getElementById('tallaChips');
-const categoriaChipsEl = document.getElementById('categoriaChips');
 const tallaFilterGroup = document.getElementById('tallaFilterGroup');
+const tallaFilterBtn = document.getElementById('tallaFilterBtn');
+const tallaPanel = document.getElementById('tallaPanel');
+const tallaCount = document.getElementById('tallaCount');
 const categoriaFilterGroup = document.getElementById('categoriaFilterGroup');
+const categoriaFilterBtn = document.getElementById('categoriaFilterBtn');
+const categoriaPanel = document.getElementById('categoriaPanel');
+const categoriaCount = document.getElementById('categoriaCount');
 let selectedTallas = new Set();
 let selectedCategorias = new Set();
 
@@ -843,8 +876,8 @@ function compararTallas(a, b){
   return a.localeCompare(b, 'es');
 }
 
-// ---------- Arma los chips de talla y categoría a partir de lo disponible ----------
-function buildFilterChips(){
+// ---------- Arma los desplegables de talla y categoría a partir de lo disponible ----------
+function buildFilterDropdowns(){
   const disponibles = rawProducts.filter(p => p.status.toLowerCase() !== 'vendido');
 
   const tallas = [...new Set(disponibles.map(p => p.talla).filter(Boolean))].sort(compararTallas);
@@ -854,26 +887,61 @@ function buildFilterChips(){
   selectedTallas = new Set([...selectedTallas].filter(t => tallas.includes(t)));
   selectedCategorias = new Set([...selectedCategorias].filter(c => categorias.includes(c)));
 
-  renderChipGroup(tallaChipsEl, tallaFilterGroup, tallas, selectedTallas);
-  renderChipGroup(categoriaChipsEl, categoriaFilterGroup, categorias, selectedCategorias);
+  renderFilterPanel(tallaPanel, tallaFilterGroup, tallaCount, tallas, selectedTallas);
+  renderFilterPanel(categoriaPanel, categoriaFilterGroup, categoriaCount, categorias, selectedCategorias);
 }
 
-function renderChipGroup(container, groupEl, values, selectedSet){
-  groupEl.style.display = values.length > 0 ? 'flex' : 'none';
-  container.innerHTML = '';
+function renderFilterPanel(panelEl, groupEl, countEl, values, selectedSet){
+  groupEl.style.display = values.length > 0 ? 'inline-block' : 'none';
+  panelEl.innerHTML = '';
   values.forEach(v => {
-    const chip = document.createElement('button');
-    chip.type = 'button';
-    chip.className = 'chip' + (selectedSet.has(v) ? ' active' : '');
-    chip.textContent = v;
-    chip.addEventListener('click', () => {
-      if (selectedSet.has(v)) selectedSet.delete(v); else selectedSet.add(v);
+    const label = document.createElement('label');
+    label.className = 'filter-option';
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.checked = selectedSet.has(v);
+    checkbox.addEventListener('change', () => {
+      if (checkbox.checked) selectedSet.add(v); else selectedSet.delete(v);
       applySort(sortSelect.value);
-      buildFilterChips();
+      updateFilterCount(countEl, selectedSet);
     });
-    container.appendChild(chip);
+
+    label.appendChild(checkbox);
+    label.appendChild(document.createTextNode(v));
+    panelEl.appendChild(label);
   });
+  updateFilterCount(countEl, selectedSet);
 }
+
+function updateFilterCount(countEl, selectedSet){
+  if (selectedSet.size > 0) {
+    countEl.textContent = selectedSet.size;
+    countEl.classList.add('show');
+  } else {
+    countEl.classList.remove('show');
+  }
+}
+
+function toggleFilterDropdown(dropdownEl){
+  const isOpen = dropdownEl.classList.contains('open');
+  document.querySelectorAll('.filter-dropdown.open').forEach(d => d.classList.remove('open'));
+  if (!isOpen) dropdownEl.classList.add('open');
+}
+
+tallaFilterBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  toggleFilterDropdown(tallaFilterGroup);
+});
+categoriaFilterBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  toggleFilterDropdown(categoriaFilterGroup);
+});
+tallaPanel.addEventListener('click', e => e.stopPropagation());
+categoriaPanel.addEventListener('click', e => e.stopPropagation());
+document.addEventListener('click', () => {
+  document.querySelectorAll('.filter-dropdown.open').forEach(d => d.classList.remove('open'));
+});
 
 // ---------- Lightbox ----------
 function renderLightboxContent(){
@@ -886,7 +954,7 @@ function renderLightboxContent(){
   const isSold = p.status.toLowerCase() === 'vendido';
   lightboxImg.src = fotos[currentPhotoIndex] || '';
   lightboxImg.alt = p.name;
-  lightboxName.textContent = p.name + (p.talla ? ` — Talla ${p.talla}` : '');
+  lightboxName.textContent = `ID ${p.id} — ${p.name}` + (p.talla ? ` — Talla ${p.talla}` : '');
   lightboxPrice.textContent = fmt(p.price);
 
   renderLightboxDots(fotos.length);
@@ -1010,7 +1078,7 @@ function renderCatalog(products){
 
     card.innerHTML = `
       <div class="item-media" style="background:${bgColors[i % bgColors.length]}">
-        <span class="item-id-badge">N° ${p.id}</span>
+        <span class="item-id-badge">ID ${p.id}</span>
         <span class="item-status ${isSold ? 'vendido' : 'disponible'}">${p.status}</span>
         ${photoBadge}
         ${mediaContent}
@@ -1047,7 +1115,7 @@ function loadCatalog(){
           categoria: String(row['Categoría'] || '').trim(),
         }));
 
-      buildFilterChips();
+      buildFilterDropdowns();
       applySort(sortSelect.value);
     },
     error: function(){
