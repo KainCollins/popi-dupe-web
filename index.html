@@ -237,8 +237,17 @@
   }
   .item-status.disponible{background:var(--green); color:#fff;}
   .item-status.vendido{background:#8a7d74; color:#fff;}
+  .photo-count{
+    position:absolute; bottom:10px; right:10px; font-family:'Space Mono'; font-size:10.5px; font-weight:700;
+    padding:4px 9px; border-radius:999px; background:rgba(43,27,18,0.75); color:#fff;
+  }
   .item-body{padding:16px 18px 20px; display:flex; flex-direction:column; gap:8px; flex:1;}
   .item-body h3{font-family:'Poppins'; font-size:17px; font-weight:600; text-transform:none;}
+  .item-talla{
+    display:inline-block; font-family:'Space Mono'; font-size:11px; font-weight:700;
+    background:var(--gold-soft); border:1.5px solid var(--ink); color:var(--ink);
+    padding:2px 9px; border-radius:999px; margin-left:8px; vertical-align:middle;
+  }
   .item-price{font-family:'Space Mono'; font-size:19px; font-weight:700; color:var(--pink-deep); margin-top:auto;}
   .wa-btn{
     margin-top:6px; width:100%; padding:12px; border-radius:10px; border:2px solid var(--ink);
@@ -259,6 +268,27 @@
   }
   @media (max-width:520px){ .sort-control{ width:100%; } .sort-control select{ flex:1; } }
 
+  .filters-bar{ display:flex; flex-wrap:wrap; gap:22px; margin:2px 0 26px; }
+  .filter-group{ display:none; align-items:center; gap:10px; flex-wrap:wrap; }
+  .filter-label{
+    font-size:11.5px; font-weight:700; color:rgba(43,27,18,0.55); text-transform:uppercase; letter-spacing:0.04em;
+  }
+  .chip-list{ display:flex; gap:8px; flex-wrap:wrap; }
+  .chip{
+    font-family:'Poppins', sans-serif; font-size:13px; font-weight:600; color:var(--ink);
+    background:var(--paper); border:2px solid var(--ink); border-radius:999px;
+    padding:7px 15px; cursor:pointer; transition:background 0.15s ease, color 0.15s ease;
+  }
+  .chip:hover{ background:var(--gold-soft); }
+  .chip.active{ background:var(--pink-deep); border-color:var(--ink); color:var(--paper); }
+
+  .lightbox-dots{ display:none; gap:7px; justify-content:center; margin-top:12px; }
+  .lightbox-dot{
+    width:9px; height:9px; border-radius:50%; background:rgba(255,255,255,0.4);
+    border:1.5px solid rgba(0,0,0,0.35); cursor:pointer;
+  }
+  .lightbox-dot.active{ background:var(--pink); border-color:var(--paper); }
+
   .item-media img.zoomable{ cursor:zoom-in; }
   .lightbox-overlay{
     position:fixed; inset:0; background:rgba(0,0,0,0.86); z-index:999;
@@ -268,6 +298,7 @@
   .lightbox-overlay img{
     max-width:90vw; max-height:78vh; border-radius:12px; box-shadow:0 10px 40px rgba(0,0,0,0.5);
   }
+  .lightbox-media{ display:flex; flex-direction:column; align-items:center; max-width:90vw; }
   .lightbox-close{
     position:absolute; top:20px; right:24px; width:40px; height:40px; border-radius:50%;
     background:var(--paper); border:2px solid var(--ink); color:var(--ink); font-size:20px;
@@ -571,12 +602,27 @@
       </select>
     </div>
   </div>
+
+  <div class="filters-bar">
+    <div class="filter-group" id="tallaFilterGroup">
+      <span class="filter-label">Talla</span>
+      <div class="chip-list" id="tallaChips"></div>
+    </div>
+    <div class="filter-group" id="categoriaFilterGroup">
+      <span class="filter-label">Categoría</span>
+      <div class="chip-list" id="categoriaChips"></div>
+    </div>
+  </div>
+
   <div class="catalog-grid" id="catalogGrid"></div>
 
   <div class="lightbox-overlay" id="lightboxOverlay">
     <span class="lightbox-close" id="lightboxClose">✕</span>
     <span class="lightbox-nav lightbox-prev" id="lightboxPrev">‹</span>
-    <img id="lightboxImg" src="" alt="">
+    <div class="lightbox-media">
+      <img id="lightboxImg" src="" alt="">
+      <div class="lightbox-dots" id="lightboxDots"></div>
+    </div>
     <span class="lightbox-nav lightbox-next" id="lightboxNext">›</span>
     <div class="lightbox-caption">
       <div class="lb-info">
@@ -762,40 +808,115 @@ const sortSelect = document.getElementById('sortSelect');
 let rawProducts = [];
 const bgColors = ['var(--gold-soft)', 'var(--bg)', 'var(--pink-soft)'];
 
+const tallaChipsEl = document.getElementById('tallaChips');
+const categoriaChipsEl = document.getElementById('categoriaChips');
+const tallaFilterGroup = document.getElementById('tallaFilterGroup');
+const categoriaFilterGroup = document.getElementById('categoriaFilterGroup');
+let selectedTallas = new Set();
+let selectedCategorias = new Set();
+
 const lightboxOverlay = document.getElementById('lightboxOverlay');
 const lightboxImg = document.getElementById('lightboxImg');
 const lightboxClose = document.getElementById('lightboxClose');
 const lightboxPrev = document.getElementById('lightboxPrev');
 const lightboxNext = document.getElementById('lightboxNext');
+const lightboxDots = document.getElementById('lightboxDots');
 const lightboxName = document.getElementById('lightboxName');
 const lightboxPrice = document.getElementById('lightboxPrice');
 const lightboxWa = document.getElementById('lightboxWa');
 
 let currentProducts = [];
 let currentIndex = 0;
+let currentPhotoIndex = 0;
 
+// ---------- Orden lógico de tallas (S antes que M antes que L...) ----------
+function compararTallas(a, b){
+  const orden = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
+  const ia = orden.indexOf(a.toUpperCase());
+  const ib = orden.indexOf(b.toUpperCase());
+  if (ia !== -1 && ib !== -1) return ia - ib;
+  if (ia !== -1) return -1;
+  if (ib !== -1) return 1;
+  const na = parseFloat(a), nb = parseFloat(b);
+  if (!isNaN(na) && !isNaN(nb)) return na - nb;
+  if (!isNaN(na)) return -1;
+  if (!isNaN(nb)) return 1;
+  return a.localeCompare(b, 'es');
+}
+
+// ---------- Arma los chips de talla y categoría a partir de lo disponible ----------
+function buildFilterChips(){
+  const disponibles = rawProducts.filter(p => p.status.toLowerCase() !== 'vendido');
+
+  const tallas = [...new Set(disponibles.map(p => p.talla).filter(Boolean))].sort(compararTallas);
+  const categorias = [...new Set(disponibles.map(p => p.categoria).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es'));
+
+  // si una talla/categoría ya no existe (ej: se vendió lo único que había), se saca sola de la selección
+  selectedTallas = new Set([...selectedTallas].filter(t => tallas.includes(t)));
+  selectedCategorias = new Set([...selectedCategorias].filter(c => categorias.includes(c)));
+
+  renderChipGroup(tallaChipsEl, tallaFilterGroup, tallas, selectedTallas);
+  renderChipGroup(categoriaChipsEl, categoriaFilterGroup, categorias, selectedCategorias);
+}
+
+function renderChipGroup(container, groupEl, values, selectedSet){
+  groupEl.style.display = values.length > 0 ? 'flex' : 'none';
+  container.innerHTML = '';
+  values.forEach(v => {
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'chip' + (selectedSet.has(v) ? ' active' : '');
+    chip.textContent = v;
+    chip.addEventListener('click', () => {
+      if (selectedSet.has(v)) selectedSet.delete(v); else selectedSet.add(v);
+      applySort(sortSelect.value);
+      buildFilterChips();
+    });
+    container.appendChild(chip);
+  });
+}
+
+// ---------- Lightbox ----------
 function renderLightboxContent(){
   const p = currentProducts[currentIndex];
   if (!p) return;
 
+  const fotos = p.fotos || [];
+  if (currentPhotoIndex >= fotos.length) currentPhotoIndex = 0;
+
   const isSold = p.status.toLowerCase() === 'vendido';
-  lightboxImg.src = p.foto;
+  lightboxImg.src = fotos[currentPhotoIndex] || '';
   lightboxImg.alt = p.name;
-  lightboxName.textContent = p.name;
+  lightboxName.textContent = p.name + (p.talla ? ` — Talla ${p.talla}` : '');
   lightboxPrice.textContent = fmt(p.price);
+
+  renderLightboxDots(fotos.length);
 
   const waMessage = encodeURIComponent(`Hola! Quiero la prenda ID ${p.id} de la Boutique Popi Dupe 😊\n\nAquí puedes ver cómo pagar paso a paso 💳\nhttps://boutiquepopidupe.cl/como-pagar.html`);
   lightboxWa.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${waMessage}`;
   lightboxWa.classList.toggle('disabled', isSold);
   lightboxWa.textContent = isSold ? 'Ya se vendió' : '💬 Resérvalo por WhatsApp';
 
-  const multiple = currentProducts.length > 1;
-  lightboxPrev.style.display = multiple ? 'flex' : 'none';
-  lightboxNext.style.display = multiple ? 'flex' : 'none';
+  const hayNavegacion = currentProducts.length > 1 || fotos.length > 1;
+  lightboxPrev.style.display = hayNavegacion ? 'flex' : 'none';
+  lightboxNext.style.display = hayNavegacion ? 'flex' : 'none';
+}
+
+function renderLightboxDots(total){
+  lightboxDots.innerHTML = '';
+  if (total <= 1) { lightboxDots.style.display = 'none'; return; }
+  lightboxDots.style.display = 'flex';
+  for (let i = 0; i < total; i++){
+    const dot = document.createElement('span');
+    dot.className = 'lightbox-dot' + (i === currentPhotoIndex ? ' active' : '');
+    dot.addEventListener('click', () => { currentPhotoIndex = i; renderLightboxContent(); });
+    lightboxDots.appendChild(dot);
+  }
 }
 
 function openLightbox(index){
   currentIndex = index;
+  currentPhotoIndex = 0;
   renderLightboxContent();
   lightboxOverlay.classList.add('active');
   document.body.style.overflow = 'hidden';
@@ -806,19 +927,37 @@ function closeLightbox(){
   document.body.style.overflow = '';
 }
 
+// Retrocede: primero entre fotos de la misma prenda, y al llegar al principio
+// salta a la prenda anterior mostrando su última foto.
 function showPrev(){
+  const p = currentProducts[currentIndex];
+  if (p && currentPhotoIndex > 0){
+    currentPhotoIndex--;
+    renderLightboxContent();
+    return;
+  }
   for (let i = 0; i < currentProducts.length; i++){
     currentIndex = (currentIndex - 1 + currentProducts.length) % currentProducts.length;
-    if (currentProducts[currentIndex].foto) break;
+    if (currentProducts[currentIndex].fotos.length) break;
   }
+  currentPhotoIndex = currentProducts[currentIndex].fotos.length - 1;
   renderLightboxContent();
 }
 
+// Avanza: primero entre fotos de la misma prenda, y al llegar a la última
+// salta a la prenda siguiente mostrando su primera foto.
 function showNext(){
+  const p = currentProducts[currentIndex];
+  if (p && currentPhotoIndex < p.fotos.length - 1){
+    currentPhotoIndex++;
+    renderLightboxContent();
+    return;
+  }
   for (let i = 0; i < currentProducts.length; i++){
     currentIndex = (currentIndex + 1) % currentProducts.length;
-    if (currentProducts[currentIndex].foto) break;
+    if (currentProducts[currentIndex].fotos.length) break;
   }
+  currentPhotoIndex = 0;
   renderLightboxContent();
 }
 
@@ -846,7 +985,7 @@ function renderCatalog(products){
   currentProducts = products;
 
   if (products.length === 0) {
-    grid.innerHTML = '<p style="grid-column:1/-1; text-align:center; opacity:0.6;">Todavía no hay prendas cargadas en el catálogo.</p>';
+    grid.innerHTML = '<p style="grid-column:1/-1; text-align:center; opacity:0.6;">No hay prendas que coincidan con el filtro elegido.</p>';
     return;
   }
 
@@ -862,18 +1001,23 @@ function renderCatalog(products){
       ? `<a class="wa-btn" href="${waLink}" target="_blank" rel="noopener">💬 Escribir por WhatsApp</a>`
       : `<span class="wa-btn disabled">Ya se vendió</span>`;
 
-    const mediaContent = p.foto
-      ? `<img class="zoomable" data-index="${i}" src="${p.foto}" alt="${p.name}" style="width:100%; height:100%; object-fit:contain; padding:12px;" loading="lazy" onerror="this.parentElement.innerHTML='<span>👕</span>'">`
+    const primeraFoto = p.fotos[0];
+    const mediaContent = primeraFoto
+      ? `<img class="zoomable" data-index="${i}" src="${primeraFoto}" alt="${p.name}" style="width:100%; height:100%; object-fit:contain; padding:12px;" loading="lazy" onerror="this.parentElement.innerHTML='<span>👕</span>'">`
       : `<span>👕</span>`;
+
+    const photoBadge = p.fotos.length > 1 ? `<span class="photo-count">📷 ${p.fotos.length}</span>` : '';
+    const tallaTag = p.talla ? `<span class="item-talla">${p.talla}</span>` : '';
 
     card.innerHTML = `
       <div class="item-media" style="background:${bgColors[i % bgColors.length]}">
         <span class="item-id-badge">N° ${p.id}</span>
         <span class="item-status ${isSold ? 'vendido' : 'disponible'}">${p.status}</span>
+        ${photoBadge}
         ${mediaContent}
       </div>
       <div class="item-body">
-        <h3>${p.name}</h3>
+        <h3>${p.name}${tallaTag}</h3>
         <div class="item-price">${fmt(p.price)}</div>
         ${buttonHtml}
       </div>
@@ -898,10 +1042,13 @@ function loadCatalog(){
           id: String(row.ID).trim(),
           name: String(row.Nombre).trim(),
           price: parseInt(String(row.Precio).replace(/[^0-9]/g, ''), 10) || 0,
-          foto: (row.Foto || '').trim(),
+          fotos: String(row.Foto || '').split('|').map(s => s.trim()).filter(Boolean),
           status: (row.Estado || 'Disponible').trim(),
+          talla: String(row.Talla || '').trim(),
+          categoria: String(row['Categoría'] || '').trim(),
         }));
 
+      buildFilterChips();
       applySort(sortSelect.value);
     },
     error: function(){
@@ -911,13 +1058,16 @@ function loadCatalog(){
 }
 
 function applySort(mode){
-  const sorted = rawProducts
-    .filter(p => p.status.toLowerCase() !== 'vendido') // piezas únicas: lo vendido no se muestra
-    .sort((a, b) => {
-      if (mode === 'price-desc') return b.price - a.price;
-      if (mode === 'price-asc') return a.price - b.price;
-      return (parseInt(a.id, 10) || 0) - (parseInt(b.id, 10) || 0); // por ID ascendente (default)
-    });
+  let filtered = rawProducts.filter(p => p.status.toLowerCase() !== 'vendido'); // piezas únicas: lo vendido no se muestra
+
+  if (selectedTallas.size > 0) filtered = filtered.filter(p => selectedTallas.has(p.talla));
+  if (selectedCategorias.size > 0) filtered = filtered.filter(p => selectedCategorias.has(p.categoria));
+
+  const sorted = filtered.sort((a, b) => {
+    if (mode === 'price-desc') return b.price - a.price;
+    if (mode === 'price-asc') return a.price - b.price;
+    return (parseInt(a.id, 10) || 0) - (parseInt(b.id, 10) || 0); // por ID ascendente (default)
+  });
 
   renderCatalog(sorted);
 }
